@@ -11,16 +11,24 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
+/**
+ * Dark color scheme for the Panggil dialer app.
+ * Uses blue as primary color, suitable for a dialer application.
+ */
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Blue80,
+    secondary = BlueGrey80,
+    tertiary = Teal80
 )
 
+/**
+ * Light color scheme for the Panggil dialer app.
+ * Uses blue as primary color, suitable for a dialer application.
+ */
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = Blue40,
+    secondary = BlueGrey40,
+    tertiary = Teal40
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -33,6 +41,18 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+/**
+ * Panggil app theme with Material3 design system.
+ * 
+ * Features:
+ * - Dark theme support (follows system setting)
+ * - Dynamic color support (Android 12+)
+ * - Customizable primary color scheme
+ * 
+ * @param darkTheme Whether to use dark theme (defaults to system setting)
+ * @param dynamicColor Whether to use dynamic colors on Android 12+
+ * @param content The composable content to theme
+ */
 @Composable
 fun PanggilTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
