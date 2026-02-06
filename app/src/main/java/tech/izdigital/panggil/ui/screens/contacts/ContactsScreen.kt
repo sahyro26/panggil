@@ -1,287 +1,88 @@
 package tech.izdigital.panggil.ui.screens.contacts
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import tech.izdigital.panggil.data.model.Contact
-import tech.izdigital.panggil.domain.PersonManager
+import androidx.lifecycle.viewmodel.compose.viewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Contacts Screen - Display all contacts or open native contacts app.
+ * 
+ * This screen has two possible implementations:
+ * 
+ * Option 1: Display contacts list within the app
+ * - Load contacts from device using ContentProvider
+ * - Display in scrollable list with search
+ * - Show contact photo, name, and phone number(s)
+ * - Click to call or add to favorites
+ * 
+ * Option 2: Open native contacts app
+ * - Simple button to launch system contacts app
+ * - Cleaner approach, leverages existing contacts UI
+ * - Less maintenance, uses system UI/UX
+ * 
+ * Architecture:
+ * - Uses ContactsViewModel for state management (MVVM pattern)
+ * - Observes UI state changes via StateFlow
+ * - Handles runtime permissions for READ_CONTACTS
+ * - All business logic is handled in the ViewModel
+ * 
+ * @param viewModel The ViewModel that manages state for this screen
+ */
 @Composable
-fun ContactsScreen() {
-    val ctx = LocalContext.current
-    val personMgr = remember { PersonManager(ctx) }
-    val viewModel = remember { ContactsViewModel(personMgr) }
-    
-    val config by viewModel.displayConfig.collectAsState()
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Contacts") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.switchDialogVisibility(true) },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add contact")
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            FilterField(
-                currentText = config.filterText,
-                onTextChange = viewModel::changeFilterText,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
-            
-            when {
-                config.visibleList.isEmpty() && config.filterText.isBlank() -> {
-                    EmptyPlaceholder()
-                }
-                config.visibleList.isEmpty() -> {
-                    NoResultsPlaceholder()
-                }
-                else -> {
-                    PeopleList(
-                        people = config.visibleList,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
-    }
-    
-    if (config.showingDialog) {
-        AddPersonDialog(
-            onDismiss = { viewModel.switchDialogVisibility(false) },
-            onConfirm = { name, phone, email ->
-                viewModel.addNewPerson(name, phone, email)
-            },
-            isBusy = config.busySaving,
-            errorText = config.problemMessage,
-            onErrorDismiss = viewModel::clearProblem
-        )
-    }
-}
-
-@Composable
-private fun FilterField(
-    currentText: String,
-    onTextChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+fun ContactsScreen(
+    viewModel: ContactsViewModel = viewModel()
 ) {
-    OutlinedTextField(
-        value = currentText,
-        onValueChange = onTextChange,
-        modifier = modifier,
-        placeholder = { Text("Filter contacts...") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        singleLine = true,
-        shape = MaterialTheme.shapes.large
-    )
-}
-
-@Composable
-private fun PeopleList(
-    people: List<Contact>,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    // TODO: Collect UI state
+    // val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(people, key = { it.id }) { person ->
-            PersonCard(person)
-        }
-    }
-}
-
-@Composable
-private fun PersonCard(person: Contact) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = person.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = person.phoneNumber,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            IconButton(onClick = { /* TODO: Call action */ }) {
-                Icon(
-                    Icons.Default.Phone,
-                    contentDescription = "Call",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyPlaceholder() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.outline
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "No contacts yet",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "Tap + to add your first contact",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.outline
-            )
-        }
-    }
-}
-
-@Composable
-private fun NoResultsPlaceholder() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+        // Placeholder content
         Text(
-            text = "No matching contacts",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = "Contacts Screen",
+            style = MaterialTheme.typography.headlineLarge,
             textAlign = TextAlign.Center
         )
+        
+        Text(
+            text = "Native contacts integration",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        
+        // TODO: Implement Permission Handling
+        // - Check READ_CONTACTS permission
+        // - Request permission if not granted
+        // - Show permission rationale if needed
+        // - Use Accompanist Permissions library
+        
+        // TODO: Option 1 - In-app Contacts List
+        // - Load contacts using ContentResolver
+        // - Display in LazyColumn with FastScrollbar
+        // - Search bar at top for filtering
+        // - Section headers (A, B, C, etc.)
+        // - Contact item: Photo, Name, Phone number(s)
+        // - Click actions: Call, Message, Add to Favorites
+        
+        // TODO: Option 2 - Open Native Contacts App
+        // - Button: "Open Contacts"
+        // - OnClick: Launch system contacts app
+        // - Intent: Intent.ACTION_VIEW with ContactsContract.Contacts.CONTENT_URI
+        // - Simpler implementation, better UX
     }
-}
-
-@Composable
-private fun AddPersonDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, String?) -> Unit,
-    isBusy: Boolean,
-    errorText: String?,
-    onErrorDismiss: () -> Unit
-) {
-    var nameInput by remember { mutableStateOf("") }
-    var phoneInput by remember { mutableStateOf("") }
-    var emailInput by remember { mutableStateOf("") }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add New Contact") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = nameInput,
-                    onValueChange = { nameInput = it },
-                    label = { Text("Name *") },
-                    singleLine = true,
-                    enabled = !isBusy
-                )
-                OutlinedTextField(
-                    value = phoneInput,
-                    onValueChange = { phoneInput = it },
-                    label = { Text("Phone *") },
-                    singleLine = true,
-                    enabled = !isBusy
-                )
-                OutlinedTextField(
-                    value = emailInput,
-                    onValueChange = { emailInput = it },
-                    label = { Text("Email (optional)") },
-                    singleLine = true,
-                    enabled = !isBusy
-                )
-                
-                if (errorText != null) {
-                    Text(
-                        text = errorText,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (nameInput.isNotBlank() && phoneInput.isNotBlank()) {
-                        onConfirm(
-                            nameInput,
-                            phoneInput,
-                            emailInput.ifBlank { null }
-                        )
-                    }
-                },
-                enabled = !isBusy && nameInput.isNotBlank() && phoneInput.isNotBlank()
-            ) {
-                if (isBusy) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp))
-                } else {
-                    Text("Add")
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isBusy) {
-                Text("Cancel")
-            }
-        }
-    )
 }
