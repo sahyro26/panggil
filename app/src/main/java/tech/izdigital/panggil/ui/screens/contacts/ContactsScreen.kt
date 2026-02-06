@@ -20,14 +20,12 @@ import tech.izdigital.panggil.domain.PersonManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactsScreen(
-    contactsVm: ContactsViewModel = run {
-        val appCtx = LocalContext.current
-        val mgr = PersonManager(appCtx)
-        ContactsViewModel(mgr)
-    }
-) {
-    val config by contactsVm.displayConfig.collectAsState()
+fun ContactsScreen() {
+    val ctx = LocalContext.current
+    val personMgr = remember { PersonManager(ctx) }
+    val viewModel = remember { ContactsViewModel(personMgr) }
+    
+    val config by viewModel.displayConfig.collectAsState()
     
     Scaffold(
         topBar = {
@@ -40,7 +38,7 @@ fun ContactsScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { contactsVm.switchDialogVisibility(true) },
+                onClick = { viewModel.switchDialogVisibility(true) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add contact")
@@ -54,7 +52,7 @@ fun ContactsScreen(
         ) {
             FilterField(
                 currentText = config.filterText,
-                onTextChange = contactsVm::changeFilterText,
+                onTextChange = viewModel::changeFilterText,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -79,13 +77,13 @@ fun ContactsScreen(
     
     if (config.showingDialog) {
         AddPersonDialog(
-            onDismiss = { contactsVm.switchDialogVisibility(false) },
+            onDismiss = { viewModel.switchDialogVisibility(false) },
             onConfirm = { name, phone, email ->
-                contactsVm.addNewPerson(name, phone, email)
+                viewModel.addNewPerson(name, phone, email)
             },
             isBusy = config.busySaving,
             errorText = config.problemMessage,
-            onErrorDismiss = contactsVm::clearProblem
+            onErrorDismiss = viewModel::clearProblem
         )
     }
 }
