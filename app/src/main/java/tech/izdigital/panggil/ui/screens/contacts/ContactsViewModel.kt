@@ -1,79 +1,61 @@
 package tech.izdigital.panggil.ui.screens.contacts
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import tech.izdigital.panggil.data.model.Contact
-import tech.izdigital.panggil.domain.PersonManager
 
-class ContactsViewModel(private val personMgr: PersonManager) : ViewModel() {
+/**
+ * ViewModel for Contacts Screen following MVVM architecture pattern.
+ * 
+ * Responsibilities:
+ * - Manage UI state for contacts screen
+ * - Load contacts from device
+ * - Handle contact selection
+ * - Search/filter contacts
+ * - Request contacts permission
+ * 
+ * The ViewModel survives configuration changes and provides
+ * a clean separation between UI and business logic.
+ */
+class ContactsViewModel : ViewModel() {
+    // Private mutable state - only ViewModel can modify
+    private val _uiState = MutableStateFlow(ContactsUiState())
     
-    private val stateHolder = MutableStateFlow(DisplayConfiguration())
-    val displayConfig: StateFlow<DisplayConfiguration> = stateHolder.asStateFlow()
+    // Public immutable state - UI observes this
+    val uiState: StateFlow<ContactsUiState> = _uiState.asStateFlow()
+    
+    // TODO: Add functions for:
+    // - fun loadContacts() - Load contacts from device
+    // - fun searchContacts(query: String) - Search/filter contacts
+    // - fun onContactSelected(contact: Contact) - Handle contact selection
+    // - fun requestContactsPermission() - Handle permission request
+    // - fun openNativeContactsApp() - Open system contacts app
     
     init {
-        beginObservingPeople()
+        // TODO: Load contacts when ViewModel is created (after permission check)
+        // checkPermissionAndLoadContacts()
     }
     
-    private fun beginObservingPeople() {
-        viewModelScope.launch {
-            personMgr.observePeople().collect { peopleList ->
-                val currentConfig = stateHolder.value
-                val toShow = when {
-                    currentConfig.filterText.isNotBlank() -> applyTextFilter(peopleList, currentConfig.filterText)
-                    else -> peopleList
-                }
-                stateHolder.value = currentConfig.copy(fullList = peopleList, visibleList = toShow)
-            }
-        }
-    }
-    
-    fun switchDialogVisibility(makeVisible: Boolean) {
-        stateHolder.value = stateHolder.value.copy(showingDialog = makeVisible)
-    }
-    
-    fun addNewPerson(theName: String, thePhone: String, theMail: String?) {
-        viewModelScope.launch {
-            stateHolder.value = stateHolder.value.copy(busySaving = true, problemMessage = null)
-            
-            val result = personMgr.registerPerson(theName, thePhone, theMail)
-            
-            stateHolder.value = when {
-                result.succeeded -> stateHolder.value.copy(busySaving = false, showingDialog = false, problemMessage = null)
-                else -> stateHolder.value.copy(busySaving = false, problemMessage = (result as tech.izdigital.panggil.domain.Outcome.Failure).reason)
-            }
-        }
-    }
-    
-    fun changeFilterText(newText: String) {
-        val currentConfig = stateHolder.value
-        val filteredResults = when {
-            newText.isNotBlank() -> applyTextFilter(currentConfig.fullList, newText)
-            else -> currentConfig.fullList
-        }
-        stateHolder.value = currentConfig.copy(filterText = newText, visibleList = filteredResults)
-    }
-    
-    private fun applyTextFilter(people: List<Contact>, filterValue: String): List<Contact> {
-        val normalized = filterValue.lowercase()
-        return people.filter { person ->
-            person.name.lowercase().contains(normalized) || person.phoneNumber.contains(filterValue)
-        }
-    }
-    
-    fun clearProblem() {
-        stateHolder.value = stateHolder.value.copy(problemMessage = null)
+    /**
+     * Clean up resources when ViewModel is destroyed
+     */
+    override fun onCleared() {
+        super.onCleared()
+        // TODO: Cancel any ongoing coroutines or cleanup resources
     }
 }
 
-data class DisplayConfiguration(
-    val fullList: List<Contact> = emptyList(),
-    val visibleList: List<Contact> = emptyList(),
-    val filterText: String = "",
-    val showingDialog: Boolean = false,
-    val busySaving: Boolean = false,
-    val problemMessage: String? = null
+/**
+ * UI State for Contacts Screen.
+ * Represents all the data that the UI needs to display.
+ */
+data class ContactsUiState(
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val hasContactsPermission: Boolean = false
+    // TODO: Add state properties:
+    // - contacts: List<Contact> = emptyList()
+    // - searchQuery: String = ""
+    // - filteredContacts: List<Contact> = emptyList()
 )
