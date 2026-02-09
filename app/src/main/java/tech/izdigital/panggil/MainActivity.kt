@@ -74,17 +74,20 @@ fun MainScreen() {
                 
                 // Create navigation bar items
                 bottomNavItems.forEach { item ->
+                    // compute selected state once
+                    val selected = currentDestination?.hierarchy?.any {
+                        it.route == item.screen.route
+                    } == true
+
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                imageVector = item.icon,
+                                imageVector = if (selected) item.filledIcon else item.outlinedIcon,
                                 contentDescription = item.label
                             )
                         },
                         label = { Text(item.label) },
-                        selected = currentDestination?.hierarchy?.any { 
-                            it.route == item.screen.route 
-                        } == true,
+                        selected = selected,
                         onClick = {
                             navController.navigate(item.screen.route) {
                                 // Pop up to the start destination of the graph to
