@@ -74,6 +74,7 @@ dependencies {
     
     // Accompanist Permissions
     implementation(libs.accompanist.permissions)
+    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -82,4 +83,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Coil for image loading
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
 }
