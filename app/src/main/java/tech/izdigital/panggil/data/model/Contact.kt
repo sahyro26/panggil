@@ -4,7 +4,8 @@ package tech.izdigital.panggil.data.model
 data class Contact(
     val id: String,
     val name: String,
-    val phoneNumbers: List<PhoneNumber>,
+    val phoneNumber: String,
+    val phoneType: PhoneType,
     val photoUri: String? = null,
     val emails: List<String> = emptyList()
 )

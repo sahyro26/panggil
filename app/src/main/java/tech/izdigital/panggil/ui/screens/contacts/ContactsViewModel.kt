@@ -50,9 +50,30 @@ class ContactsViewModel(
         }
     }
 
+//    fun onSearchQueryChange(query: String) {
+//        _uiState.update {
+//            val filtered = repository.searchContacts(it.contacts, query)
+//            it.copy(
+//                searchQuery = query,
+//                filteredContacts = filtered
+//            )
+//        }
+//    }
+
     fun onSearchQueryChange(query: String) {
         _uiState.update {
-            val filtered = repository.searchContacts(it.contacts, query)
+            val normalizedQuery = query.replace(Regex("[\\s\\-()]"), "")
+            val filtered = if (normalizedQuery.isEmpty()) {
+                it.contacts
+            } else {
+                it.contacts.filter { contact ->
+                    val normalizedName = contact.name.replace(Regex("[\\s\\-()]"), "")
+                    val normalizedPhone = contact.phoneNumber.replace(Regex("[\\s\\-()]"), "")
+
+                    normalizedName.contains(normalizedQuery, ignoreCase = true) ||
+                            normalizedPhone.contains(normalizedQuery, ignoreCase = true)
+                }
+            }
             it.copy(
                 searchQuery = query,
                 filteredContacts = filtered

@@ -67,7 +67,8 @@ class ContactsRepository(private val context: Context) {
             Contact(
                 id = id,
                 name = name,
-                phoneNumbers = phoneNumbers,
+                phoneNumber = phoneNumbers.firstOrNull()?.number ?: "",
+                phoneType = phoneNumbers.firstOrNull()?.type ?: PhoneType.OTHER,
                 photoUri = photoUri
             )
         }.sortedBy { it.name }
@@ -78,7 +79,7 @@ class ContactsRepository(private val context: Context) {
         val lowerQuery = query.lowercase()
         return contacts.filter { contact ->
             contact.name.lowercase().contains(lowerQuery) ||
-                    contact.phoneNumbers.any { it.number.contains(lowerQuery) }
+                    contact.phoneNumber.contains(lowerQuery)
         }
     }
 }

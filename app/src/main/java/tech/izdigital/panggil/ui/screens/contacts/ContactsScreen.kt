@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -26,13 +27,14 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import tech.izdigital.panggil.data.model.Contact
-import tech.izdigital.panggil.data.model.PhoneNumber
+import tech.izdigital.panggil.ui.screens.call.FloatingNumpadButton
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ContactsScreen(
     viewModel: ContactsViewModel,
-    onCallContact: (String) -> Unit = {}
+    onCallContact: (String) -> Unit = {},
+    onAddContact: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -52,46 +54,65 @@ fun ContactsScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Search Bar
-        SearchBar(
-            query = uiState.searchQuery,
-            onQueryChange = viewModel::onSearchQueryChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
+    Box(modifier = Modifier.fillMaxSize()) {
 
-        when {
-            !contactsPermissionState.status.isGranted -> {
-                PermissionRequestContent(
-                    showRationale = contactsPermissionState.status.shouldShowRationale,
-                    onRequestPermission = { contactsPermissionState.launchPermissionRequest() }
-                )
-            }
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Search Bar
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
 
-            uiState.isLoading -> {
-                LoadingContent()
-            }
+            when {
+                !contactsPermissionState.status.isGranted -> {
+                    PermissionRequestContent(
+                        showRationale = contactsPermissionState.status.shouldShowRationale,
+                        onRequestPermission = { contactsPermissionState.launchPermissionRequest() }
+                    )
+                }
 
-            uiState.error != null -> {
-                ErrorContent(
-                    error = uiState.error!!,
-                    onRetry = { viewModel.loadContacts() }
-                )
-            }
-            uiState.filteredContacts.isEmpty() -> {
-                EmptyContent(searchQuery = uiState.searchQuery)
-            }
+                uiState.isLoading -> {
+                    LoadingContent()
+                }
 
-            else -> {
-                ContactsList(
-                    contacts = uiState.filteredContacts,
-                    onCallContact = onCallContact
-                )
+                uiState.error != null -> {
+                    ErrorContent(
+                        error = uiState.error!!,
+                        onRetry = { viewModel.loadContacts() }
+                    )
+                }
+
+                uiState.filteredContacts.isEmpty() -> {
+                    EmptyContent(searchQuery = uiState.searchQuery)
+                }
+
+                else -> {
+                    ContactsList(
+                        contacts = uiState.filteredContacts,
+                        onCallContact = onCallContact
+                    )
+                }
             }
         }
+
+        FloatingActionButton(
+            onClick = onAddContact,
+            containerColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add contact"
+            )
+        }
     }
+
+
 }
 
 @Composable
@@ -137,7 +158,7 @@ private fun ContactItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { contact.phoneNumbers.firstOrNull()?.let { onCallContact(it.number) } }
+            .clickable {  }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -171,21 +192,13 @@ private fun ContactItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            contact.phoneNumbers.firstOrNull()?.let { phone ->
-                Text(
-                    text = "${phone.number} (${phone.type.name})",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-        // Call Button
-        IconButton(
-            onClick = { contact.phoneNumbers.firstOrNull()?.let { onCallContact(it.number) } }
-        ) {
-            Icon(Icons.Default.Call, contentDescription = "Call")
+            Text(
+                text = "${contact.phoneNumber} (${contact.phoneType})",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
